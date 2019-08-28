@@ -11,16 +11,17 @@ function processCurrentState() {
     return {name: 'current'}
 }
 
-function processHandleState(event) {
-    return ({name: 'handle', event: event})
-    res.send({data: 'current'})
+function processHandleEvent(event) {
+    return ({name: 'event', event: event})
 }
 
 app.get('/currentState/', (req,res) => {
     res.send(processCurrentState())
 })
-app.post('/handleState/', (req,res) => {
-    res.send(processHandleState(req.param('event')))
+app.post('/handleEvent/', (req,res) => {
+    res.send(processHandleEvent(req.param('event')))
 })
 
 module.exports.handler = serverless(app);
+module.exports.processHandleEvent = processHandleEvent;
+module.exports.processCurrentState = processCurrentState;

@@ -20,10 +20,12 @@ functions:
           path: currentState
           method: get
       - http:
-          path: handleState
+          path: handleEvent
           method: post
-  currentState:
-    handler: index.currentState
+  processHandleEvent:
+    handler: index.processHandleEvent
+  processCurrentState:
+    handler: index.processCurrentState
 
 custom:
   dynamodb:
