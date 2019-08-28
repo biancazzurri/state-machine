@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "./node_modules/.bin/serverless offline -s dev",
+    "debug": "export SLS_DEBUG=* && node --inspect ./node_modules/.bin/serverless offline -s dev"
   },
-  "author": "",
+  "author": "Roman Smelyansky",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",

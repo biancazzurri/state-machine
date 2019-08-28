@@ -7,12 +7,20 @@ const app = express()
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-app.get('/currentState/', (req, res) => {
+function processCurrentState() {
+    return {name: 'current'}
+}
+
+function processHandleState(event) {
+    return ({name: 'handle', event: event})
     res.send({data: 'current'})
+}
+
+app.get('/currentState/', (req,res) => {
+    res.send(processCurrentState())
+})
+app.post('/handleState/', (req,res) => {
+    res.send(processHandleState(req.param('event')))
 })
 
-app.post('/handleState/', (req, res) => {
-    res.send({data: 'handle'})
-})
-
-module.exports.handler = serverless(app)
+module.exports.handler = serverless(app);
