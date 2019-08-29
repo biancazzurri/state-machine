@@ -7,12 +7,26 @@ const app = express()
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
+let StateMachine = require('javascript-state-machine')
+
+let fsm = new StateMachine({ init: 'solid',
+transitions: [
+  { name: 'melt',     from: 'solid',  to: 'liquid' },
+  { name: 'freeze',   from: 'liquid', to: 'solid'  },
+  { name: 'vaporize', from: 'liquid', to: 'gas'    },
+  { name: 'condense', from: 'gas',    to: 'liquid' }
+]})
+
 function processCurrentState() {
-    return {name: 'current'}
+    return {name: fsm.state}
 }
 
 function processHandleEvent(event) {
-    return ({name: 'event', event: event})
+    let fn = fsm[event]
+    if (typeof fn == 'function') {
+        fn.bind(fsm)()
+    }
+    return ({name: fsm.state})
 }
 
 app.get('/currentState/', (req,res) => {
