@@ -34,7 +34,20 @@ app.post('/event/', (req,res) => {
 })
 
 function onRegisterMachine(machine) {
-    return {id: "123123"}
+    let id = uuidv1()
+    let tableName = "dev-machine-spec";
+    var params = {
+        TableName: tableName,
+        Item: {
+            id: id,
+            machineSpec: JSON.stringify(machine)
+        }
+    }
+
+    return dynamodb.put(params).promise().then(data => {
+        data = Object.assign({id:id},data);
+        return {id: id};
+    })
 }
 
 app.post('/registerMachine/', (req, res) => {

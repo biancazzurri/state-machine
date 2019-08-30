@@ -26,6 +26,9 @@ describe('Server', () => {
             .post('/registerMachine')
             .end((err, result) => {
                 result.should.have.status(200);
+                result.should.be('json');
+                result.should.have.a('id');
+                let id = result['id'];
             });
 
             done();
