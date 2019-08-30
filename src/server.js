@@ -33,7 +33,7 @@ app.post('/event/', (req,res) => {
     res.send(onEvent(req.param('event')));
 })
 
-function onRegisterMachine(machine) {
+async function onRegisterMachine(machine, context) {
     let id = uuidv1()
     let tableName = "dev-machine-spec";
     var params = {
@@ -44,14 +44,14 @@ function onRegisterMachine(machine) {
         }
     }
 
-    return dynamodb.put(params).promise().then(data => {
+    dynamodb.put(params).promise().then(data => {
         data = Object.assign({id:id},data);
-        return {id: id};
+        context.send({id: id});
     })
 }
 
-app.post('/registerMachine/', (req, res) => {
-    res.send(onRegisterMachine(req.param('machine')))
+app.post('/registerMachine/', (req, context) => {
+    onRegisterMachine(req.params['machine'], context);
 })
 
 module.exports = app;

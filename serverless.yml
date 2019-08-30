@@ -27,6 +27,13 @@ functions:
       - http:
           path: /event
           method: post
+  registerMachine:
+    handler: src/index.handler
+    events:
+      - http:
+          path: /registerMachine
+          method: post
+  
   processHandleEvent:
     handler: index.processHandleEvent
   processCurrentState:

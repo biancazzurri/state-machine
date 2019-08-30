@@ -20,15 +20,27 @@ describe('Server', () => {
         s.close();
     });
 
+    let machineSpec = {
+        init: 'solid',
+        transitions: [
+          { name: 'melt',     from: 'solid',  to: 'liquid' },
+          { name: 'freeze',   from: 'liquid', to: 'solid'  },
+          { name: 'vaporize', from: 'liquid', to: 'gas'    },
+          { name: 'condense', from: 'gas',    to: 'liquid' }
+        ]
+    };
+
     describe('register machine', () => {
         it('it should register a machine', (done) => {
             chai.request(server)
             .post('/registerMachine')
+            .set('content-type', 'application/json')
+            .send({machine: machineSpec})
             .end((err, result) => {
                 result.should.have.status(200);
-                result.should.be('json');
-                result.should.have.a('id');
-                let id = result['id'];
+                result.body.should.be.a('object');
+                result.body.should.have.all.keys('id');
+                //let id = result['id'];
             });
 
             done();
