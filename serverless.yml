@@ -16,14 +16,16 @@ plugins:
 
 functions:
   state:
+    handler: src/index.handler
     events:
       - http:
-          path: currentState
+          path: /state
           method: get
   event:
+    handler: src/index.handler
     events:
       - http:
-          path: handleEvent
+          path: /event
           method: post
   processHandleEvent:
     handler: index.processHandleEvent
