@@ -6,11 +6,11 @@ provider:
   region: us-east-1
   profile: default
   memorySize: 256 # optional, in MB, default is 1024
-  stage: prod
+  stage: dev
 
 plugins:
-  - serverless-offline
   - serverless-dynamodb-local
+  - serverless-offline
 
 functions:
   stateMachine:
@@ -26,34 +26,45 @@ functions:
     handler: index.processHandleEvent
   processCurrentState:
     handler: index.processCurrentState
+  processAddMachineSpec:
+    handler: index.processAddMachineSpec
 
 custom:
   dynamodb:
     stages:
-      - test
       - dev
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+    migration:
+      dir: offline/migrations
   # Our stage is based on what is passed in when running serverless
   # commands. Or fallsback to what we have set in the provider section.
   stage: ${opt:stage, self:provider.stage}
   # Set the table name here so we can use it while testing locally
-  tableName: ${self:custom.stage}-games
+  machineSpecTableName: ${self:custom.stage}-machine-spec
   serverless-offline:   ## add this two lines
     port: 4000        ## bellow "custom:" line
 
-Resources:
-  gamesTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: ${self:custom.tableName}
-      AttributeDefinitions:
-        - AttributeName: idGame
-          AttributeType: S
-      KeySchema:
-        - AttributeName: idGame
-          KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 3
-        WriteCapacityUnits: 3
+environment:
+  machineSpecTableName: ${self:custom.machineSpecTableName}
+
+resources:
+  Resources:
+    machineSpecTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.machineSpecTableName}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
 
 iamRoleStatements:
   # These environment variables are made available to our functions
