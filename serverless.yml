@@ -1,3 +1,5 @@
+org: ramansme
+app: statemachine-app
 service: statemachine
 
 provider:
@@ -13,12 +15,13 @@ plugins:
   - serverless-offline
 
 functions:
-  stateMachine:
-    handler: index.handler
+  state:
     events:
       - http:
           path: currentState
           method: get
+  event:
+    events:
       - http:
           path: handleEvent
           method: post
