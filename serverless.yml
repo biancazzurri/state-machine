@@ -25,13 +25,13 @@ functions:
     handler: src/index.handler
     events:
       - http:
-          path: /instance/{id}
+          path: /instance/{instanceId}
           method: get
   processMachineEvent:
     handler: src/index.handler
     events:
       - http:
-          path: /instance
+          path: /instance/{instanceId}
           method: put
   newMachine:
     handler: src/index.handler
@@ -39,13 +39,12 @@ functions:
       - http:
           path: /machine
           method: post
-  
-  processHandleEvent:
-    handler: index.processHandleEvent
-  processCurrentState:
-    handler: index.processCurrentState
-  processAddMachineSpec:
-    handler: index.processAddMachineSpec
+  getMachine:
+    handler: src/index.handler
+    events:
+      - http:
+          path: /machine/{machineId}
+          method: get
 
 custom:
   dynamodb:
