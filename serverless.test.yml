@@ -1,0 +1,5 @@
+- name: creates machine instance
+  endpoint: {function: createMachineInstance}
+  response:
+    body: 
+        machine: "{\"init\":\"solid\",\"transitions\":[{\"name\":\"melt\",\"from\":\"solid\",\"to\":\"liquid\"},{\"name\":\"freeze\",\"from\":\"liquid\",\"to\":\"solid\"},{\"name\":\"vaporize\",\"from\":\"liquid\",\"to\":\"gas\"},{\"name\":\"condense\",\"from\":\"gas\",\"to\":\"liquid\"}]}"
