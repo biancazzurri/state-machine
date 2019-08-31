@@ -9,7 +9,7 @@ provider:
   profile: default
   memorySize: 256 # optional, in MB, default is 1024
   stage: dev
-  
+
   environment:
     machineTableName: ${self:custom.machineTableName}
     instanceTableName: ${self:custom.instanceTableName}
@@ -30,6 +30,7 @@ provider:
         - "Fn::GetAtt": [ NotesTable, Arn ]
 
 plugins:
+  - serverless-webpack
   - serverless-dynamodb-local
   - serverless-offline
 
@@ -66,6 +67,11 @@ functions:
           method: get
 
 custom:
+  webpack:
+    webpackConfig: 'webpack.config.js'   # Name of webpack configuration file
+    includeModules: false   # Node modules configuration for packaging
+    packager: 'npm'   # Packager that will be used to package your external modules
+    excludeFiles: test/**/*.js # Provide a glob for files to ignore
   dynamodb:
     stages:
       - test
