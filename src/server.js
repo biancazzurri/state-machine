@@ -3,6 +3,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const uuidv1 = require('uuid/v1');
+var StateMachine = require('javascript-state-machine');
 
 const app = express();
 
@@ -18,20 +19,6 @@ function onState() {
     return {name: "123123"}
 }
 
-app.get('/instance/:id', (req, res) => {
-    let id = req.params['id'];
-    res.send(onState());
-})
-
-function onEvent(event) {
-    // let fn = fsm[event]
-    // if (typeof fn == 'function') {
-    //     fn.bind(fsm)()
-    // }
-    // return ({name: fsm.state})
-    return {name: "132123123"}
-}
-
 function getMachine(machineId) {
     let params = {
         TableName: machineTableName,
@@ -40,10 +27,36 @@ function getMachine(machineId) {
         }
     };
     
-    return dynamodb.get(params).promise();
+    return new Promise((resolve, reject) => {
+        dynamodb.get(params).promise()
+        .then(data => {
+            if (data.Item) {
+                resolve(data.Item);
+            } else {
+                reject({text: 'Machine not found'})
+            }
+        })
+        .catch(error => {
+            reject(error);
+        })
+    });
 }
 
-const machineNotFoundText = 'Machine not found';
+function instanceState(fsm) {
+    return {
+        currentState: fsm.state,
+        availableEvents: fsm.transitions()
+    };
+}
+
+function saveInstance(data) {
+    let instanceParams = {
+        TableName: instanceTableName,
+        Item: data
+    };
+
+    return dynamodb.put(instanceParams).promise();
+}
 
 //create new machine instance using registered spec
 app.post('/instance/', (req, context) => {
@@ -55,21 +68,106 @@ app.post('/instance/', (req, context) => {
         }
     };
 
-    getMachine(machineId).then((data) => {
-        if (data.Item) {
-            let instanceId = uuidv1();
-            let Item = {machineId, instanceId};
-            let instanceParams = {
-                TableName: instanceTableName,
-                Item
-            };
+    getMachine(machineId)
+    .then(data => {
+        let instanceId = uuidv1();
+        saveInstance({machineId, instanceId})
+        .then(data => {
+            context.send({instanceId});
+        })
+        .catch(error => {
+            context.status(400).send({instanceId});
+        });
+    })
+    .catch(error => {
+        context.status(400).send(error);
+    });
+})
 
-            dynamodb.put(instanceParams).promise().then((data) => {
-                context.send(Item);
-            });
-        } else {
-            context.status(400).send({text: machineNotFoundText});
-        } 
+function getInstance(instanceId) {
+    let params = {
+        TableName: instanceTableName,
+        Key: { 
+            instanceId 
+        }
+    }
+
+    return new Promise((resolve, reject) => {
+        dynamodb.get(params).promise()
+        .then(data => {
+            if (data.Item) {
+                let instanceData = data.Item;
+                getMachine(instanceData.machineId)
+                .then(machineData => {
+                    let  spec = JSON.parse(machineData.spec);
+                    if (instanceData.currentState) {
+                        spec['init'] = instanceData.currentState;
+                    }
+                    instanceData.fsm = new StateMachine(spec);
+                    resolve(instanceData);
+                })
+                .catch(error => {
+                    reject(error);
+                });
+            } else {
+                reject({text: 'Instance not found'});
+            }
+        })
+        .catch(error => {
+            reject(error);
+        })
+    });
+}
+
+function updateInstanceState(instanceId, currentState) {
+    let params = {
+        TableName: instanceTableName,
+        Key: {
+            instanceId
+        },
+        UpdateExpression: 'set currentState = :x',
+        ExpressionAttributeValues: {
+            ':x': currentState
+        }
+    };
+
+    return dynamodb.update(params).promise();
+}
+
+//process instance event
+app.put('/instance/:instanceId', (req, context) => {
+    let instanceId = req.params['instanceId'];
+    getInstance(instanceId)
+    .then(instanceData => {
+        let { instanceId, fsm } = instanceData;
+        let event = req.body['event'];
+        let fn = fsm[event];
+        if (fn && typeof fn == 'function' && fsm.can(event)) {
+            fn.bind(fsm)();
+        }
+        let currentState = fsm.state;
+        updateInstanceState(instanceId, currentState)
+        .then(data => {
+            context.send(instanceState(fsm));
+        })
+        .catch(error => {
+            context.status(400).send(error);
+        });
+    })
+    .catch(error => {
+        context.status(400).send(error);
+    });
+});
+
+//get instance state
+app.get('/instance/:instanceId', (req, context) => {
+    let instanceId = req.params['instanceId'];
+    getInstance(instanceId)
+    .then(data => {
+        context.send(instanceState(data.fsm));
+    })
+    .catch(error => {
+        context.status(400).send(error);
     });
 })
 
@@ -85,7 +183,7 @@ app.post('/machine/', (req, context) => {
         }
     }
 
-    dynamodb.put(params).promise().then((data) => {
+    dynamodb.put(params).promise().then(data => {
         context.send({machineId});
     })
 });
@@ -94,12 +192,12 @@ app.post('/machine/', (req, context) => {
 app.get('/machine/:machineId', (req, context) => {
     let machineId = req.params['machineId'];
 
-    getMachine(machineId).then((data) => {
-        if (data.Item) {
-            context.send({spec: data.Item.spec});
-        } else {
-            context.status(400).send({text: machineNotFoundText});
-        }
+    getMachine(machineId)
+    .then(data => {
+        context.send({spec: data.spec});
+    })
+    .catch(error => {
+        context.status(400).send(error);
     })
 });
 

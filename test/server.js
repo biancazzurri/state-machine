@@ -34,7 +34,7 @@ describe('Server', () => {
         let registeredMachineId = null;
         let machineInstanceId = null;
 
-        it('should register a machine', (done) => {
+        it('should register a machine', done => {
             chai
             .request(server)
             .post('/machine')
@@ -49,7 +49,7 @@ describe('Server', () => {
             });
         });
 
-        it('should retrieve registered machine', (done) => {
+        it('should retrieve registered machine', done => {
             chai
             .request(server)
             .get(`/machine/${registeredMachineId}`)
@@ -63,7 +63,7 @@ describe('Server', () => {
             });
         });
 
-        it('should return error for non existent machine retrieval', (done) => {
+        it('should return error for non existent machine retrieval', done => {
             chai
             .request(server)
             .get('/machine/non-existent-id')
@@ -76,7 +76,7 @@ describe('Server', () => {
             });
         });
 
-        it('should create machine instance', (done) => {
+        it('should create machine instance', done => {
             chai
             .request(server)
             .post('/instance')
@@ -85,13 +85,13 @@ describe('Server', () => {
             .end((err, result) => {
                 result.should.have.status(200);
                 result.body.should.be.a('object');
-                result.body.should.have.all.keys('instanceId','machineId');
+                result.body.should.have.all.keys('instanceId');
                 machineInstanceId = result.body['instanceId'];
                 done();
             });
         });
 
-        it('should return error for non existing machine instance creation', (done) => {
+        it('should return error for non existing machine instance creation', done => {
             chai
             .request(server)
             .post('/instance')
@@ -105,5 +105,90 @@ describe('Server', () => {
                 done();
             });
         });
+
+        it('should retrieve instance state', done => {
+            chai
+            .request(server)
+            .get(`/instance/${machineInstanceId}`)
+            .end((err, result) => {
+                result.should.have.status(200);
+                result.body.should.be.a('object');
+                result.body.should.have.all.keys('currentState','availableEvents');
+                result.body['currentState'].should.be.equal('solid');
+                result.body['availableEvents'].should.deep.equal(['melt']);
+                done();
+            });
+        });
+
+        it('should return 400 on non existent instance', done => {
+            chai
+            .request(server)
+            .get('/instance/non-existent-id')
+            .end((err, result) => {
+                result.should.have.status(400);
+                result.body.should.be.a('object');
+                result.body.should.have.all.keys('text');
+                result.body['text'].should.equal('Instance not found')
+                done();
+            });
+        });
+
+        it('should return machine state on event', done => {
+            chai
+            .request(server)
+            .put(`/instance/${machineInstanceId}`)
+            .set('content-type', 'application/json')
+            .send({event: 'melt'})
+            .end((err, result) => {
+                result.should.have.status(200);
+                result.body.should.be.a('object');
+                result.body.should.have.all.keys('currentState','availableEvents');
+                result.body['currentState'].should.be.equal('liquid');
+                result.body['availableEvents'].should.deep.equal(['freeze','vaporize']);
+                done();
+            });
+        });
+
+        it('should retrieve instance state 2', done => {
+            chai
+            .request(server)
+            .get(`/instance/${machineInstanceId}`)
+            .end((err, result) => {
+                result.should.have.status(200);
+                result.body.should.be.a('object');
+                result.body.should.have.all.keys('currentState','availableEvents');
+                result.body['currentState'].should.be.equal('liquid');
+                result.body['availableEvents'].should.deep.equal(['freeze','vaporize']);
+                done();
+            });
+        });
+
+        it('should ignore handle non relevant events', done => {
+            chai
+            .request(server)
+            .put(`/instance/${machineInstanceId}`)
+            .set('content-type', 'application/json')
+            .send({event: 'melt'})
+            .end((err, result) => {
+                result.should.have.status(200);
+                result.body['currentState'].should.be.equal('liquid');
+                done();
+            });      
+        });
+
+        it('should return 400 for event for non existent instance', done => {
+            chai
+            .request(server)
+            .put('/instance/non-existent-id')
+            .set('content-type', 'application/json')
+            .send({event: 'melt'})
+            .end((err, result) => {
+                result.should.have.status(400);
+                result.body.should.be.a('object');
+                result.body.should.have.all.keys('text');
+                result.body['text'].should.equal('Instance not found')
+                done();
+            });  
+        })
     })
 })
