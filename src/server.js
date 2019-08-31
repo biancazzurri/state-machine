@@ -9,10 +9,17 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+let config = require('config');
 
 const dynamodb = require('./dynamodb');
-const machineTableName = 'dev-machine';
-const instanceTableName = 'dev-instance';
+
+function resolveTableName(tableNameField) {
+    return config[tableNameField] || process.env[tableNameField];
+}
+
+const machineTableName = resolveTableName('machineTableName');
+const instanceTableName = resolveTableName('instanceTableName');
+console.log(`Table names: ${machineTableName}, ${instanceTableName}`);
 
 function onState() {
     // return {name: fsm.state}

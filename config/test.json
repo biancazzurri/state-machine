@@ -2,5 +2,7 @@
     "DynamoDb": {
         "region": "localhost",
         "endpoint": "http://localhost:8000"
-    }
+    },
+    "machineTableName": "test-machine",
+    "instanceTableName": "test-instance"
 }
