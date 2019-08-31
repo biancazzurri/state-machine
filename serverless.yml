@@ -15,23 +15,29 @@ plugins:
   - serverless-offline
 
 functions:
-  state:
+  createMachineInstance:
     handler: src/index.handler
     events:
       - http:
-          path: /state
+          path: /instance
+          method: post    
+  machineState:
+    handler: src/index.handler
+    events:
+      - http:
+          path: /instance/{id}
           method: get
-  event:
+  processMachineEvent:
     handler: src/index.handler
     events:
       - http:
-          path: /event
-          method: post
-  registerMachine:
+          path: /instance
+          method: put
+  newMachine:
     handler: src/index.handler
     events:
       - http:
-          path: /registerMachine
+          path: /machine
           method: post
   
   processHandleEvent:
@@ -55,24 +61,39 @@ custom:
   # commands. Or fallsback to what we have set in the provider section.
   stage: ${opt:stage, self:provider.stage}
   # Set the table name here so we can use it while testing locally
-  machineSpecTableName: ${self:custom.stage}-machine-spec
+  machineTableName: ${self:custom.stage}-machine
+  instanceTableName: ${self:custom.stage}-instance
   serverless-offline:   ## add this two lines
     port: 4000        ## bellow "custom:" line
 
 environment:
-  machineSpecTableName: ${self:custom.machineSpecTableName}
+  machineTableName: ${self:custom.machineTableName}
+  instanceTableName: ${self:custom.instanceTableName}
 
 resources:
   Resources:
-    machineSpecTable:
+    instanceTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.machineSpecTableName}
+        TableName: ${self:custom.instanceTableName}
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: instanceId
             AttributeType: S
         KeySchema:
-          - AttributeName: id
+          - AttributeName: instanceId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    machineTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.machineTableName}
+        AttributeDefinitions:
+          - AttributeName: machineId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: machineId
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1

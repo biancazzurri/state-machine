@@ -1,6 +1,6 @@
 {
     "Table": {
-        "TableName": "${self:custom.stage}-machine-spec",
+        "TableName": "${self:custom.stage}-machines",
         "KeySchema": [
             {
                 "AttributeName": "id",
@@ -10,10 +10,6 @@
         "AttributeDefinitions": [
             {
                 "AttributeName": "id",
-                "AttributeType": "S"
-            },
-            {
-                "AttributeName": "machineSpec",
                 "AttributeType": "S"
             }
         ],

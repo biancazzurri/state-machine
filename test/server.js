@@ -30,20 +30,80 @@ describe('Server', () => {
         ]
     };
 
-    describe('register machine', () => {
-        it('it should register a machine', (done) => {
-            chai.request(server)
-            .post('/registerMachine')
+    describe('Machine Lifecycle', () => {
+        let registeredMachineId = null;
+        let machineInstanceId = null;
+
+        it('should register a machine', (done) => {
+            chai
+            .request(server)
+            .post('/machine')
             .set('content-type', 'application/json')
             .send({machine: machineSpec})
             .end((err, result) => {
                 result.should.have.status(200);
                 result.body.should.be.a('object');
-                result.body.should.have.all.keys('id');
-                //let id = result['id'];
+                result.body.should.have.all.keys('machineId');
+                registeredMachineId = result.body['machineId'];
+                done();
             });
+        });
 
-            done();
-        })
+        it('should retrieve registered machine', (done) => {
+            chai
+            .request(server)
+            .get(`/machine/${registeredMachineId}`)
+            .end((err, result) => {
+                result.should.have.status(200);
+                result.body.should.be.a('object');
+                result.body.should.have.all.keys('spec');
+                JSON.parse(result.body['spec']).should.deep.equal(machineSpec);
+
+                done();
+            });
+        });
+
+        it('should return error for non existent machine retrieval', (done) => {
+            chai
+            .request(server)
+            .get('/machine/non-existent-id')
+            .end((err, result) => {
+                result.should.have.status(400);
+                result.body.should.be.a('object');
+                result.body.should.have.all.keys('text');
+                result.body['text'].should.equal('Machine not found')
+                done();
+            });
+        });
+
+        it('should create machine instance', (done) => {
+            chai
+            .request(server)
+            .post('/instance')
+            .set('content-type', 'application/json')
+            .send({machineId: registeredMachineId})
+            .end((err, result) => {
+                result.should.have.status(200);
+                result.body.should.be.a('object');
+                result.body.should.have.all.keys('instanceId','machineId');
+                machineInstanceId = result.body['instanceId'];
+                done();
+            });
+        });
+
+        it('should return error for non existing machine instance creation', (done) => {
+            chai
+            .request(server)
+            .post('/instance')
+            .set('content-type', 'application/json')
+            .send({machineId: 'non-extisting-key'})
+            .end((err, result) => {
+                result.should.have.status(400);
+                result.body.should.be.a('object');
+                result.body.should.have.all.keys('text');
+                result.body['text'].should.equal('Machine not found')
+                done();
+            });
+        });
     })
 })
