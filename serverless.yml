@@ -11,8 +11,8 @@ provider:
   stage: dev
 
   environment:
-    machineTableName: ${self:custom.machineTableName}
-    instanceTableName: ${self:custom.instanceTableName}
+    machineTableName: { "Ref": "machineTable" }
+    instanceTableName: { "Ref": "instanceTable" }
 
   iamRoleStatements:
     - Effect: Allow
@@ -27,7 +27,8 @@ provider:
       # Restrict our IAM role permissions to
       # the specific table for the stage
       Resource:
-        - "Fn::GetAtt": [ NotesTable, Arn ]
+        - { "Fn::GetAtt": ["machineTable", "Arn"] }
+        - { "Fn::GetAtt": ["instanceTable", "Arn"] }
 
 plugins:
   - serverless-webpack
@@ -90,8 +91,8 @@ custom:
     port: 4000        ## bellow "custom:" line
 
 environment:
-  machineTableName: ${self:custom.machineTableName}
-  instanceTableName: ${self:custom.instanceTableName}
+  machineTableName: { "Ref": "machineTable" }
+  instanceTableName: { "Ref": "instanceTable" }
 
 resources:
   Resources:
