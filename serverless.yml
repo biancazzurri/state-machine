@@ -36,33 +36,21 @@ plugins:
   - serverless-offline
 
 functions:
-  createMachineInstance:
+  stateMachine:
     handler: src/index.handler
     events:
       - http:
           path: /instance
           method: post    
-  machineState:
-    handler: src/index.handler
-    events:
       - http:
           path: /instance/{instanceId}
           method: get
-  processMachineEvent:
-    handler: src/index.handler
-    events:
       - http:
           path: /instance/{instanceId}
           method: put
-  newMachine:
-    handler: src/index.handler
-    events:
       - http:
           path: /machine
           method: post
-  getMachine:
-    handler: src/index.handler
-    events:
       - http:
           path: /machine/{machineId}
           method: get
