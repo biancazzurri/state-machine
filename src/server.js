@@ -75,7 +75,7 @@ app.post('/instance/', (req, context) => {
         }
     };
 
-    getMachine(machineId)
+    return getMachine(machineId)
     .then(data => {
         let instanceId = uuidv1();
         saveInstance({machineId, instanceId})
@@ -100,7 +100,7 @@ function getInstance(instanceId) {
     }
 
     return new Promise((resolve, reject) => {
-        dynamodb.get(params).promise()
+        return dynamodb.get(params).promise()
         .then(data => {
             if (data.Item) {
                 let instanceData = data.Item;
@@ -144,7 +144,7 @@ function updateInstanceState(instanceId, currentState) {
 //process instance event
 app.put('/instance/:instanceId', (req, context) => {
     let instanceId = req.params['instanceId'];
-    getInstance(instanceId)
+    return getInstance(instanceId)
     .then(instanceData => {
         let { instanceId, fsm } = instanceData;
         let event = req.body['event'];
@@ -169,7 +169,7 @@ app.put('/instance/:instanceId', (req, context) => {
 //get instance state
 app.get('/instance/:instanceId', (req, context) => {
     let instanceId = req.params['instanceId'];
-    getInstance(instanceId)
+    return getInstance(instanceId)
     .then(data => {
         context.send(instanceState(data.fsm));
     })
@@ -190,7 +190,7 @@ app.post('/machine/', (req, context) => {
         }
     }
 
-    dynamodb.put(params).promise().then(data => {
+    return dynamodb.put(params).promise().then(data => {
         context.send({machineId});
     })
 });
@@ -199,7 +199,7 @@ app.post('/machine/', (req, context) => {
 app.get('/machine/:machineId', (req, context) => {
     let machineId = req.params['machineId'];
 
-    getMachine(machineId)
+    return getMachine(machineId)
     .then(data => {
         context.send({spec: data.spec});
     })

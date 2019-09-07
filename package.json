@@ -6,7 +6,8 @@
   "scripts": {
     "start": "./node_modules/.bin/serverless offline -s dev",
     "debug": "export SLS_DEBUG=* && node --inspect ./node_modules/.bin/serverless offline -s dev",
-    "test": "export NODE_ENV=test && mocha --timeout 10000"
+    "test": "export NODE_ENV=test && mocha --timeout 10000",
+    "test:integration": "export SERVER_URL=$(sls info | awk '/endpoints/{getline; print}' | sed -n 's/.*\\(http.*amazonaws\\.com\\).*/\\1/p') && mocha  --timeout 10000"
   },
   "author": "Roman Smelyansky",
   "license": "ISC",
@@ -27,6 +28,7 @@
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
     "mocha": "^6.2.0",
+    "request": "^2.88.0",
     "serverless-dynamodb-local": "^0.2.38",
     "serverless-offline": "^5.10.1",
     "serverless-webpack": "^5.3.1"

@@ -4,20 +4,28 @@ let chai = require('chai');
 let chaiHttp = require('chai-http');
 let server = require('../src/server');
 let should = chai.should();
-
+let endpoint = null;
 chai.use(chaiHttp);
 
 let port = 3000;
 
 describe('Server', () => {
-    let s = null;
+    let serverStop = null;
 
     before(() => {
-        s = server.listen(port, () => console.log(`Listening on port ${port}`));
+        console.log(`Server: ${process.env.SERVER_URL}`);
+        if (process.env.SERVER_URL) {
+            endpoint = 'https://vfl2lxx33c.execute-api.us-east-1.amazonaws.com/dev';
+        } else {
+            serverStop = server.listen(port, () => console.log(`Listening on port ${port}`));
+            endpoint = server;
+        }
     });
 
     after(() => {
-        s.close();
+        if (serverStop) {
+            serverStop.close();
+        }
     });
 
     let machineSpec = {
@@ -36,7 +44,7 @@ describe('Server', () => {
 
         it('should register a machine', done => {
             chai
-            .request(server)
+            .request(endpoint)
             .post('/machine')
             .set('content-type', 'application/json')
             .send({machine: machineSpec})
@@ -51,7 +59,7 @@ describe('Server', () => {
 
         it('should retrieve registered machine', done => {
             chai
-            .request(server)
+            .request(endpoint)
             .get(`/machine/${registeredMachineId}`)
             .end((err, result) => {
                 result.should.have.status(200);
@@ -65,7 +73,7 @@ describe('Server', () => {
 
         it('should return error for non existent machine retrieval', done => {
             chai
-            .request(server)
+            .request(endpoint)
             .get('/machine/non-existent-id')
             .end((err, result) => {
                 result.should.have.status(400);
@@ -78,7 +86,7 @@ describe('Server', () => {
 
         it('should create machine instance', done => {
             chai
-            .request(server)
+            .request(endpoint)
             .post('/instance')
             .set('content-type', 'application/json')
             .send({machineId: registeredMachineId})
@@ -93,7 +101,7 @@ describe('Server', () => {
 
         it('should return error for non existing machine instance creation', done => {
             chai
-            .request(server)
+            .request(endpoint)
             .post('/instance')
             .set('content-type', 'application/json')
             .send({machineId: 'non-extisting-key'})
@@ -108,7 +116,7 @@ describe('Server', () => {
 
         it('should retrieve instance state', done => {
             chai
-            .request(server)
+            .request(endpoint)
             .get(`/instance/${machineInstanceId}`)
             .end((err, result) => {
                 result.should.have.status(200);
@@ -122,7 +130,7 @@ describe('Server', () => {
 
         it('should return 400 on non existent instance', done => {
             chai
-            .request(server)
+            .request(endpoint)
             .get('/instance/non-existent-id')
             .end((err, result) => {
                 result.should.have.status(400);
@@ -135,7 +143,7 @@ describe('Server', () => {
 
         it('should return machine state on event', done => {
             chai
-            .request(server)
+            .request(endpoint)
             .put(`/instance/${machineInstanceId}`)
             .set('content-type', 'application/json')
             .send({event: 'melt'})
@@ -151,7 +159,7 @@ describe('Server', () => {
 
         it('should retrieve instance state 2', done => {
             chai
-            .request(server)
+            .request(endpoint)
             .get(`/instance/${machineInstanceId}`)
             .end((err, result) => {
                 result.should.have.status(200);
@@ -165,7 +173,7 @@ describe('Server', () => {
 
         it('should ignore handle non relevant events', done => {
             chai
-            .request(server)
+            .request(endpoint)
             .put(`/instance/${machineInstanceId}`)
             .set('content-type', 'application/json')
             .send({event: 'melt'})
@@ -178,7 +186,7 @@ describe('Server', () => {
 
         it('should return 400 for event for non existent instance', done => {
             chai
-            .request(server)
+            .request(endpoint)
             .put('/instance/non-existent-id')
             .set('content-type', 'application/json')
             .send({event: 'melt'})
